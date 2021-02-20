@@ -61,8 +61,8 @@ flutter:
 
 
   fonts:
-    - family: Schyler
+    - family: VarelaRound
       fonts:
-        - asset: fonts/VarelaRound-Regular.ttf
+        - asset: assets/fonts/VarelaRound-Regular.ttf
 
 
