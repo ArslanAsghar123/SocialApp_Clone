@@ -1,13 +1,20 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:socialapp/models/user.dart';
 import 'package:socialapp/pages/activity_feed.dart';
+import 'package:socialapp/pages/create_account.dart';
 import 'package:socialapp/pages/profile.dart';
 import 'package:socialapp/pages/search.dart';
 import 'package:socialapp/pages/timeline.dart';
 import 'package:socialapp/pages/upload.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 final GoogleSignIn googleSignIn = GoogleSignIn();
+final firestoreInstance = FirebaseFirestore.instance;
+final DateTime timestamp = DateTime.now();
+User currentUser;
 
 class Home extends StatefulWidget {
   @override
@@ -31,13 +38,13 @@ class _HomeState extends State<Home> {
     googleSignIn.signInSilently(suppressErrors: false).then((account) {
       handleSignIn(account);
     }).catchError((err) {
-      print('Eroor in SignIn!: $err');
+      print('Error in SignIn!: $err');
     });
   }
 
   handleSignIn(GoogleSignInAccount account) {
     if (account != null) {
-      print('user Sign in! : $account');
+      createUserInFirestore();
       setState(() {
         isAuth = true;
       });
@@ -46,6 +53,33 @@ class _HomeState extends State<Home> {
         isAuth = false;
       });
     }
+  }
+
+  createUserInFirestore() async {
+    final GoogleSignInAccount user = googleSignIn.currentUser;
+    DocumentSnapshot doc =
+        await firestoreInstance.collection("users").doc(user.id).get();
+
+    if (!doc.exists) {
+      final username = await Navigator.push(
+          context, MaterialPageRoute(builder: (context) => CreateAccount()));
+
+      firestoreInstance.collection('users').doc(user.id).set({
+        "id": user.id,
+        "username": username,
+        "photoUrl": user.photoUrl,
+        "email": user.email,
+        "displayName": user.displayName,
+        "bio": "",
+        "timestamp": timestamp
+      });
+      doc = await firestoreInstance.collection("users").doc(user.id).get();
+    }
+      currentUser = User.fromDocument(doc);
+    print(currentUser);
+    print(currentUser.username);
+
+
   }
 
   login() {
@@ -61,8 +95,9 @@ class _HomeState extends State<Home> {
       this.pageIndex = pageIndex;
     });
   }
+
   @override
-  void dispose(){
+  void dispose() {
     pageController.dispose();
     super.dispose();
   }
@@ -111,18 +146,16 @@ class _HomeState extends State<Home> {
   }
 
   onTap(int pageIndex) {
-    pageController.animateToPage(
-      pageIndex,
-      duration: Duration(milliseconds: 300),
-      curve:  Curves.easeInOut
-    );
+    pageController.animateToPage(pageIndex,
+        duration: Duration(milliseconds: 300), curve: Curves.easeInOut);
   }
 
   Scaffold buildAuthScreen() {
     return Scaffold(
       body: PageView(
         children: <Widget>[
-          TimeLine(),
+          //TimeLine(),
+          RaisedButton(child: Text('Logout'), onPressed: logout),
           ActivityFeed(),
           Upload(),
           Search(),
