@@ -10,9 +10,14 @@ import 'package:socialapp/pages/timeline.dart';
 import 'package:socialapp/pages/upload.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
+
+final storageRef = FirebaseStorage.instance.ref();
 
 final GoogleSignIn googleSignIn = GoogleSignIn();
 final firestoreInstance = FirebaseFirestore.instance;
+final firestorepost = FirebaseFirestore.instance;
 final DateTime timestamp = DateTime.now();
 User currentUser;
 
@@ -157,9 +162,9 @@ class _HomeState extends State<Home> {
           //TimeLine(),
           RaisedButton(child: Text('Logout'), onPressed: logout),
           ActivityFeed(),
-          Upload(),
+          Upload(currenUser: currentUser,),
           Search(),
-          Profile(),
+          Profile(profileId:currentUser?.id),
         ],
         controller: pageController,
         onPageChanged: onPageChanged,
